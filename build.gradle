@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.3.41'
+}
+
+apply plugin: 'kotlin-kapt'
+
+group 'xyz.dean'
+version '0.1'
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    kapt project(":myprocessor")
+    implementation project(":myprocessor")
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+    compile "org.jetbrains.kotlin:kotlin-reflect:1.3.41"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+kapt {
+    javacOptions {
+        option("-encoding", "utf-8")
+    }
+}
