@@ -5,3 +5,6 @@
 /build/classes/java/main/
 /myprocessor/build/
 /.idea/
+
+local.properties
+kotlin-core.iml

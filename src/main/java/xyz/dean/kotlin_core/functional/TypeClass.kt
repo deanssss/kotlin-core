@@ -42,7 +42,7 @@ package xyz.dean.kotlin_core.functional
 //
 //// 但是搞错当前类型的情况还是可能存在
 //data class Dog(override val name: String, val color: Int) : Pet<Cat> {
-//    override fun renamed(newName: String) = Cat(newName) // 不小心又写错了，狗子又变成了猫
+//    override fun renamed(newName: String) = copy(name = newName) // 不小心又写错了，狗子又变成了猫
 //}
 //
 //// 还有另一种可能
@@ -79,7 +79,7 @@ val cat3 = esquire(cat1, RenameCat)
 data class Dog(override val name: String) : Pet
 
 object RenameDog : Rename<Cat> {
-    override fun Cat.rename(newName: String) = copy() // 又又手滑了
+    override fun Cat.rename(newName: String) = copy(name = newName) // 又又手滑了
 }
 
 val dog1 = Dog("WangCai")
