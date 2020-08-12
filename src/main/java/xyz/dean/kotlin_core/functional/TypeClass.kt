@@ -103,7 +103,7 @@ object StringEq : Eq<String> {
 //////////////////////////////////////
 // Typeclass与高阶类型结合处理容器类型
 /////////////////////////////////////
-interface Kind<F, A>
+interface Kind<out F, out A>
 
 interface Functor<F> {
     fun <A, B> Kind<F, A>.map(f: (A) -> B): Kind<F, B>
