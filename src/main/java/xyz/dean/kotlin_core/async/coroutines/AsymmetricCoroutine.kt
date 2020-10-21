@@ -4,6 +4,7 @@
 
 package xyz.dean.kotlin_core.async.coroutines
 
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.*
@@ -71,6 +72,11 @@ class Coroutine<P, R>(
             ?.resumeWith(result)
     }
 
+    @Suppress("unused")
+    suspend fun <SymT> SymCoroutine<SymT>.yield(value: R): P {
+        return scope.yield(value)
+    }
+
     inner class CoroutineScope {
         suspend fun yield(value: R): P = suspendCoroutine { continuation ->
             val previousStatus = status.getAndUpdate {
@@ -99,16 +105,17 @@ class Coroutine<P, R>(
     }
 }
 
-class Dispatcher : ContinuationInterceptor {
+class Dispatcher(
+    private val executor: Executor = Executors.newSingleThreadExecutor()
+) : ContinuationInterceptor {
     override val key = ContinuationInterceptor
-    private val executor = Executors.newSingleThreadExecutor()
 
     override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> {
         return object : Continuation<T> {
             override val context = continuation.context
 
             override fun resumeWith(result: Result<T>) {
-                executor.submit {
+                executor.execute {
                     continuation.resumeWith(result)
                 }
             }
