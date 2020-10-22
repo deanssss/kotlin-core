@@ -4,8 +4,7 @@
 
 package xyz.dean.kotlin_core.async.coroutines
 
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
+import xyz.dean.kotlin_core.async.coroutines.dispatcher.DispatcherContext
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.*
 
@@ -105,26 +104,8 @@ class Coroutine<P, R>(
     }
 }
 
-class Dispatcher(
-    private val executor: Executor = Executors.newSingleThreadExecutor()
-) : ContinuationInterceptor {
-    override val key = ContinuationInterceptor
-
-    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> {
-        return object : Continuation<T> {
-            override val context = continuation.context
-
-            override fun resumeWith(result: Result<T>) {
-                executor.execute {
-                    continuation.resumeWith(result)
-                }
-            }
-        }
-    }
-}
-
 suspend fun main() {
-    val producer = Coroutine.create<Unit, Int>(Dispatcher()) {
+    val producer = Coroutine.create<Unit, Int>(DispatcherContext()) {
         yield(666)
         for (i in 0 .. 3) {
             log("send", i)
@@ -134,7 +115,7 @@ suspend fun main() {
         200
     }
 
-    val consumer = Coroutine.create<Int, Unit>(Dispatcher()) {
+    val consumer = Coroutine.create<Int, Unit>(DispatcherContext()) {
         for (i in 0 .. 3) {
             val value = yield(Unit)
             log("receive", value)

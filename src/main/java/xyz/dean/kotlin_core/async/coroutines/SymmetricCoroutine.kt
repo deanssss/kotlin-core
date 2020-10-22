@@ -4,6 +4,7 @@
 
 package xyz.dean.kotlin_core.async.coroutines
 
+import xyz.dean.kotlin_core.async.coroutines.dispatcher.DispatcherContext
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -78,7 +79,7 @@ class SymCoroutine<T> private constructor(
 }
 
 object SymCoroutines {
-    val coroutine0: SymCoroutine<Int> = SymCoroutine.create(Dispatcher()) {
+    val coroutine0: SymCoroutine<Int> = SymCoroutine.create(DispatcherContext()) {
         log("coroutine-0", "first")
         var result = transfer(coroutine2, 0)
         log("coroutine-0", "second", "received:$result")
@@ -86,13 +87,13 @@ object SymCoroutines {
         log("coroutine-0", "third", "receive:$result")
     }
 
-    val coroutine1: SymCoroutine<Int> = SymCoroutine.create(Dispatcher()) {
+    val coroutine1: SymCoroutine<Int> = SymCoroutine.create(DispatcherContext()) {
         log("coroutine-1", "first")
         val result = transfer(coroutine0, 1)
         log("coroutine-1", "second", "received:$result")
     }
 
-    val coroutine2: SymCoroutine<Int> = SymCoroutine.create(Dispatcher()) {
+    val coroutine2: SymCoroutine<Int> = SymCoroutine.create(DispatcherContext()) {
         log("coroutine-2", "first")
         var result = transfer(coroutine1, 2)
         log("coroutine-2", "second", "received:$result")
@@ -102,7 +103,7 @@ object SymCoroutines {
 }
 
 suspend fun main() {
-    SymCoroutine.main(Dispatcher()) {
+    SymCoroutine.main(DispatcherContext()) {
         log("main", "start")
         val result = transfer(SymCoroutines.coroutine2, -1)
         log("main", "end", "received:$result")
