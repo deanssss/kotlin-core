@@ -13,9 +13,21 @@ object DefaultDispatcher : Dispatcher {
 
     private val executor = Executors.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors()) { runnable ->
         Thread(threadGroup, runnable, "${threadGroup.name}-worker-${threadIndex.getAndIncrement()}")
+            .apply { isDaemon = true }
     }
 
     override fun dispatch(block: () -> Unit) {
         executor.submit(block)
+    }
+}
+
+object SingleDispatcher : Dispatcher {
+    private val singleExecutors = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "SingleDispatcher")
+            .apply { isDaemon = true }
+    }
+
+    override fun dispatch(block: () -> Unit) {
+        singleExecutors.submit(block)
     }
 }
