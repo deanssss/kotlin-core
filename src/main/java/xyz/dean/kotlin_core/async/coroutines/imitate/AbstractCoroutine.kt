@@ -43,7 +43,7 @@ abstract class AbstractCoroutine<T>(
     }
 
     // 为当前协程注册了一个执行完成时的回调，disposable会被放到disposableList中，待当前协程执行完毕时（resumeWith调用时）回调。
-    private fun doOnCompleted(block: (Result<T>) -> Unit): Disposable {
+    protected fun doOnCompleted(block: (Result<T>) -> Unit): Disposable {
         val  disposable = CompletionHandlerDisposable(this, block)
         val newState = state.updateAndGet { oldState ->
             when (oldState) {

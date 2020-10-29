@@ -7,17 +7,29 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 fun main() = runBlocking {
-    log("0")
+    log("Job Start")
     val job = launch(Dispatchers.Single) {
-        log("1")
+        log("Job-1")
         val result = hello()
-        log("result", result)
+        log("Hello-result", result)
         delay(1000L)
-        log("3")
+        log("Job-2")
     }
-    log("${job.isActive}")
+    log("JobState ${job.isActive}")
     job.join()
-    log("after")
+    log("Job End")
+    log("=======================")
+    log("Async Start")
+    val def = async {
+        log("Async-1")
+        delay(1000L)
+        log("Async-2")
+        "Hello Async"
+//        error("Exception")
+    }
+    log("waiting...")
+    val result = def.await()
+    log("Async Result:", result)
 }
 
 suspend fun hello() = suspendCoroutine<Int> {

@@ -18,6 +18,15 @@ fun launch(
     return completion
 }
 
+fun <T> async(
+    context: CoroutineContext = EmptyCoroutineContext,
+    block: suspend () -> T
+): Deferred<T> {
+    val completion = DeferredCoroutine<T>(newCoroutineContext(context))
+    block.startCoroutine(completion)
+    return completion
+}
+
 private val coroutineIndex = AtomicInteger(0)
 
 fun newCoroutineContext(context: CoroutineContext): CoroutineContext {
