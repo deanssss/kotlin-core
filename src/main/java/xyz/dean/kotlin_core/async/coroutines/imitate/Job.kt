@@ -10,6 +10,8 @@ interface Job : CoroutineContext.Element {
 
     val isActive: Boolean
 
+    val isCompleted: Boolean
+
 //    fun invokeOnComplete(onComplete: OnComplete): Disposable
 
     fun remove(disposable: Disposable)

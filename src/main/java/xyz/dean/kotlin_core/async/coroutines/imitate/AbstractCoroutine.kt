@@ -9,10 +9,13 @@ import kotlin.coroutines.suspendCoroutine
 abstract class AbstractCoroutine<T>(
     override val context: CoroutineContext
 ) : Job, Continuation<T> {
-    private val state = AtomicReference<CoroutineState>(InComplete())
+    protected val state = AtomicReference<CoroutineState>(InComplete())
 
     override val isActive: Boolean
         get() = state.get() is InComplete
+
+    override val isCompleted: Boolean
+        get() = state.get() is Complete<*>
 
 //    override fun invokeOnComplete(onComplete: OnComplete): Disposable {
 //        return doOnCompleted { onComplete() }

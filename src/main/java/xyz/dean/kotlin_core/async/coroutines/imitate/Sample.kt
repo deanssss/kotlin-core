@@ -6,7 +6,8 @@ import kotlin.concurrent.thread
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-suspend fun main() {
+fun main() = runBlocking {
+    log("0")
     val job = launch(Dispatchers.Single) {
         log("1")
         val result = hello()
