@@ -21,6 +21,12 @@ sealed class CoroutineState {
         }
     }
 
+    fun notifyCancellation() {
+        disposableList.loopOn<CancellationHandlerDisposable> {
+            it.onCancel()
+        }
+    }
+
     fun clear() {
         disposableList = DisposableList.Nil
     }
@@ -32,3 +38,5 @@ class Complete<T>(
     val value: T? = null,
     val exception: Throwable? = null
 ) : CoroutineState()
+
+class Cancelling : CoroutineState()

@@ -7,9 +7,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 abstract class AbstractCoroutine<T>(
-    override val context: CoroutineContext
+    context: CoroutineContext
 ) : Job, Continuation<T> {
     protected val state = AtomicReference<CoroutineState>(InComplete())
+    override val context: CoroutineContext = context + this
 
     override val isActive: Boolean
         get() = state.get() is InComplete
@@ -21,18 +22,55 @@ abstract class AbstractCoroutine<T>(
 //        return doOnCompleted { onComplete() }
 //    }
 
+    override fun invokeOnCancel(onCancel: OnCancel): Disposable {
+        val disposable = CancellationHandlerDisposable(this, onCancel)
+        val newState = state.updateAndGet { oldState ->
+            when (oldState) {
+                is InComplete -> {
+                    InComplete().from(oldState).with(disposable)
+                }
+                is Complete<*>,
+                is Cancelling ->{
+                    oldState
+                }
+            }
+        }
+        (newState as? Cancelling)?.let { onCancel() }
+        return disposable
+    }
+
     override fun remove(disposable: Disposable) {
         state.updateAndGet { oldState ->
             when (oldState) {
                 is InComplete -> InComplete().from(oldState).withOut(disposable)
                 is Complete<*> -> oldState
+                is Cancelling -> {
+                    Cancelling().from(oldState).withOut(disposable)
+                }
             }
         }
     }
 
     override suspend fun join() {
         when (state.get()) {
+            is Cancelling,
             is InComplete -> return joinSuspend()
+            is Complete<*> -> return
+        }
+    }
+
+    override fun cancel() {
+        val newState = state.updateAndGet { oldState ->
+            when (oldState) {
+                is InComplete -> Cancelling().from(oldState)
+                is Complete<*>,
+                is Cancelling -> {
+                    oldState
+                }
+            }
+        }
+        if (newState is Cancelling) {
+            newState.notifyCancellation()
         }
     }
 
@@ -53,6 +91,9 @@ abstract class AbstractCoroutine<T>(
                 is Complete<*> -> {
                     oldState
                 }
+                is Cancelling -> {
+                    Cancelling().from(oldState).with(disposable)
+                }
             }
         }
         @Suppress("UNCHECKED_CAST")
@@ -71,6 +112,7 @@ abstract class AbstractCoroutine<T>(
     override fun resumeWith(result: Result<T>) {
         val newState = state.updateAndGet { oldState ->
             when (oldState) {
+                is Cancelling,
                 is InComplete -> {
                     Complete(result.getOrNull(), result.exceptionOrNull()).from(oldState)
                 }

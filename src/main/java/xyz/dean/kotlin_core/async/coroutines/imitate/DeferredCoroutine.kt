@@ -9,6 +9,7 @@ class DeferredCoroutine<T>(
     override suspend fun await(): T {
         @Suppress("UNCHECKED_CAST")
         return when(val currentState = state.get()) {
+            is Cancelling,
             is InComplete -> awaitSuspend()
             is Complete<*> -> (currentState.value as T?) ?: throw currentState.exception!!
         }
