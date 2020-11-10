@@ -1,5 +1,6 @@
 package xyz.dean.kotlin_core.async.coroutines.imitate
 
+import kotlinx.coroutines.CoroutineName
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
@@ -119,8 +120,23 @@ abstract class AbstractCoroutine<T>(
                 is Complete<*> -> error("Already completed!")
             }
         }
-//        (newState as Complete<T>).exception?.let {  }
+        @Suppress("UNCHECKED_CAST")
+        (newState as Complete<T>).exception?.let(::tryHandleException)
+
         newState.notifyCompletion(result)
         newState.clear()
+    }
+
+    private fun tryHandleException(e: Throwable): Boolean {
+        return when (e) {
+            is CancellationException -> false
+            else -> handleJobException(e)
+        }
+    }
+
+    protected open fun handleJobException(e: Throwable): Boolean = false
+
+    override fun toString(): String {
+        return "${context[CoroutineName]?.name}"
     }
 }
