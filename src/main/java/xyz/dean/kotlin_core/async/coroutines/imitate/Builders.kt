@@ -9,28 +9,28 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 
-fun launch(
+fun CoroutineScope.launch(
     context: CoroutineContext = EmptyCoroutineContext,
-    block: suspend () -> Unit
+    block: suspend CoroutineScope.() -> Unit
 ): Job {
     val completion = StandardCoroutine(newCoroutineContext(context))
-    block.startCoroutine(completion)
+    block.startCoroutine(completion, completion)
     return completion
 }
 
-fun <T> async(
+fun <T> CoroutineScope.async(
     context: CoroutineContext = EmptyCoroutineContext,
-    block: suspend () -> T
+    block: suspend CoroutineScope.() -> T
 ): Deferred<T> {
     val completion = DeferredCoroutine<T>(newCoroutineContext(context))
-    block.startCoroutine(completion)
+    block.startCoroutine(completion, completion)
     return completion
 }
 
 private val coroutineIndex = AtomicInteger(0)
 
-fun newCoroutineContext(context: CoroutineContext): CoroutineContext {
-    val combined = context + CoroutineName("@coroutine#${coroutineIndex.getAndIncrement()}")
+fun CoroutineScope.newCoroutineContext(context: CoroutineContext): CoroutineContext {
+    val combined = scopeContext + context + CoroutineName("@coroutine#${coroutineIndex.getAndIncrement()}")
     return if (combined !== Dispatchers.Default
         && combined[ContinuationInterceptor] == null) {
         combined + Dispatchers.Default
@@ -44,7 +44,7 @@ fun <T> runBlocking(
     block: suspend () -> T
 ): T {
     val eventQueue = BlockingQueueDispatcher()
-    val newContext = newCoroutineContext(context + DispatcherContext(eventQueue))
+    val newContext = context + DispatcherContext(eventQueue)
     val completion = BlockingCoroutine<T>(newContext, eventQueue)
     block.startCoroutine(completion)
     return completion.joinBlocking()

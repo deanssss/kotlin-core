@@ -1,6 +1,7 @@
 package xyz.dean.kotlin_core.async.coroutines.imitate
 
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.suspendCoroutine
 
 class DeferredCoroutine<T>(
@@ -11,7 +12,14 @@ class DeferredCoroutine<T>(
         return when(val currentState = state.get()) {
             is Cancelling,
             is InComplete -> awaitSuspend()
-            is Complete<*> -> (currentState.value as T?) ?: throw currentState.exception!!
+            is Complete<*> -> {
+                coroutineContext[Job]?.isActive
+                    ?.takeIf { !it }
+                    ?.let {
+                        throw CancellationException("Coroutine is cancelled.")
+                    }
+                (currentState.value as T?) ?: throw currentState.exception!!
+            }
         }
     }
 

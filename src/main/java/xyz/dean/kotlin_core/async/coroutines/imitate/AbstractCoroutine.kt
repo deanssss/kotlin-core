@@ -2,22 +2,29 @@ package xyz.dean.kotlin_core.async.coroutines.imitate
 
 import kotlinx.coroutines.CoroutineName
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import kotlin.coroutines.*
 
 abstract class AbstractCoroutine<T>(
     context: CoroutineContext
-) : Job, Continuation<T> {
+) : Job, Continuation<T>, CoroutineScope {
     protected val state = AtomicReference<CoroutineState>(InComplete())
     override val context: CoroutineContext = context + this
+
+    protected val parentJob = context[Job]
+
+    override val scopeContext: CoroutineContext
+        get() = context
 
     override val isActive: Boolean
         get() = state.get() is InComplete
 
     override val isCompleted: Boolean
         get() = state.get() is Complete<*>
+
+    private var parentCancelDisposable: Disposable? =
+        parentJob?.invokeOnCancel {
+            cancel()
+        }
 
 //    override fun invokeOnComplete(onComplete: OnComplete): Disposable {
 //        return doOnCompleted { onComplete() }
@@ -56,7 +63,13 @@ abstract class AbstractCoroutine<T>(
         when (state.get()) {
             is Cancelling,
             is InComplete -> return joinSuspend()
-            is Complete<*> -> return
+            is Complete<*> -> {
+                val currentCallingState = coroutineContext[Job]?.isActive ?: return
+                if (!currentCallingState) {
+                    throw CancellationException("Coroutine is cancelled.")
+                }
+                return
+            }
         }
     }
 
@@ -73,6 +86,8 @@ abstract class AbstractCoroutine<T>(
         if (newState is Cancelling) {
             newState.notifyCancellation()
         }
+
+        parentCancelDisposable?.dispose()
     }
 
     private suspend fun joinSuspend() = suspendCoroutine<Unit> { continuation ->
@@ -125,16 +140,27 @@ abstract class AbstractCoroutine<T>(
 
         newState.notifyCompletion(result)
         newState.clear()
+        parentCancelDisposable?.dispose()
     }
 
     private fun tryHandleException(e: Throwable): Boolean {
         return when (e) {
             is CancellationException -> false
-            else -> handleJobException(e)
+            else -> {
+                (parentJob as? AbstractCoroutine<*>)
+                    ?.handleChildException(e)
+                    ?.takeIf { it }
+                    ?: handleJobException(e)
+            }
         }
     }
 
     protected open fun handleJobException(e: Throwable): Boolean = false
+
+    protected open fun handleChildException(e: Throwable): Boolean {
+        cancel()
+        return tryHandleException(e)
+    }
 
     override fun toString(): String {
         return "${context[CoroutineName]?.name}"
