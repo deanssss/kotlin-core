@@ -5,6 +5,7 @@
 package xyz.dean.kotlin_core.async.coroutines
 
 import xyz.dean.kotlin_core.async.coroutines.dispatcher.DispatcherContext
+import xyz.dean.kotlin_core.util.log
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.*
 
@@ -126,8 +127,4 @@ suspend fun main() {
         val result = producer.resume(Unit)
         consumer.resume(result)
     }
-}
-
-fun log(msg: String, vararg args: Any) {
-    println("[${Thread.currentThread().name}] $msg ${args.joinToString(separator = " ")}")
 }

@@ -16,6 +16,7 @@ import xyz.dean.kotlin_core.api.PhraseService
 import xyz.dean.kotlin_core.api.core.ApiClient
 import xyz.dean.kotlin_core.async.coroutines.dispatcher.Dispatcher
 import xyz.dean.kotlin_core.async.coroutines.dispatcher.DispatcherContext
+import xyz.dean.kotlin_core.util.log
 import kotlin.coroutines.*
 
 interface AsyncScope
@@ -74,7 +75,7 @@ private fun oKHttpClientProvider(): OkHttpClient {
     val builder = OkHttpClient.Builder()
     val logger = object : HttpLoggingInterceptor.Logger {
         override fun log(message: String) {
-            xyz.dean.kotlin_core.async.coroutines.log(message)
+            xyz.dean.kotlin_core.util.log(message)
         }
     }
     builder.addInterceptor(HttpLoggingInterceptor(logger)

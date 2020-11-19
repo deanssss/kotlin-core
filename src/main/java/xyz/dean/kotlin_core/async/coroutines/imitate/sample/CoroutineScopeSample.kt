@@ -1,7 +1,7 @@
 package xyz.dean.kotlin_core.async.coroutines.imitate.sample
 
 import xyz.dean.kotlin_core.async.coroutines.imitate.*
-import xyz.dean.kotlin_core.async.coroutines.log
+import xyz.dean.kotlin_core.util.log
 import java.lang.RuntimeException
 
 @Suppress("UNREACHABLE_CODE")

@@ -3,7 +3,7 @@ package xyz.dean.kotlin_core.async.coroutines.imitate.sample
 import xyz.dean.kotlin_core.async.coroutines.imitate.GlobalScope
 import xyz.dean.kotlin_core.async.coroutines.imitate.delay
 import xyz.dean.kotlin_core.async.coroutines.imitate.launch
-import xyz.dean.kotlin_core.async.coroutines.log
+import xyz.dean.kotlin_core.util.log
 import kotlin.concurrent.thread
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
